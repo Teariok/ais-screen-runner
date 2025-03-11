@@ -1,6 +1,6 @@
 from inky.auto import auto
 from font_hanken_grotesk import HankenGroteskBold, HankenGroteskMedium
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 import os
 import math
@@ -49,9 +49,16 @@ class Screen:
     BLUE="#0000FF"
     YELLOW="#FFFF00"
 
-    def __init__(self,imgDir):
+    MODE_LIGHT=0
+    MODE_DARK=1
+
+    __LARGE_ICON_SIZE = 40
+    __SMALL_ICON_SIZE = 24
+
+    def __init__(self,imgDir,mode = None):
         self.activeShip = None
         self.imgDir = imgDir
+        self.mode = mode if mode else self.MODE_LIGHT
 
         self.hanken_bold_35 = ImageFont.truetype(HankenGroteskBold, 35)
         self.hanken_bold_20 = ImageFont.truetype(HankenGroteskBold, 20)
@@ -61,14 +68,31 @@ class Screen:
         self.info_icon_size = 24
 
         self.inky = auto(ask_user=True, verbose=False)
-        
+
         self.height = self.inky.width
         self.width = self.inky.height
+
+        self.icons = {}
+        self.__loadIcon("ship", "icon_ship.png", self.__LARGE_ICON_SIZE)
+        self.__loadIcon("mmsi", "icon_mmsi.png", self.__SMALL_ICON_SIZE)
+        self.__loadIcon("callsign", "icon_callsign.png", self.__SMALL_ICON_SIZE)
+        self.__loadIcon("shiptype", "icon_shiptype.png", self.__SMALL_ICON_SIZE)
+        self.__loadIcon("dest", "icon_dest.png", self.__SMALL_ICON_SIZE)
+        self.__loadIcon("speed", "icon_speed.png", self.__SMALL_ICON_SIZE)
+
+    def __loadIcon(self, key, filename, size):
+        icon = Image.open(os.path.join("icon", filename))
+        self.icons[key] = self.resizeImage(icon, size, size)
+
+    def setMode(self, mode):
+        if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):
+            self.mode = mode
+            self._renderScreen()
 
     def getTextSize(self, font, text):
         _, _, right, bottom = font.getbbox(text)
         return (right, bottom)
-    
+
     def getVesselType(self, value):
         vessel_type = VESSEL_TYPES.get(value)
 
@@ -105,12 +129,17 @@ class Screen:
     def displayShip(self, shipData):
         if self.activeShip is not None and self.activeShip["mmsi"] == shipData["mmsi"]:
             return
-        
+
         self.activeShip = shipData
+        self._renderScreen()
+
+    def _renderScreen(self):
+        if self.activeShip == None:
+            return
         
         #print("Draw Ship")
-        #print(shipData)
-        
+        #print(self.activeShip)
+
         img = Image.new("RGB", (self.width,self.height), color=self.BLUE)
         draw = ImageDraw.Draw(img)
 
@@ -126,11 +155,8 @@ class Screen:
         text_y += 10
 
         # Draw the boat icon
-        icon = Image.open("icon_ship.png")
-        icon = self.resizeImage(icon, self.ship_icon_size, self.ship_icon_size)
-        img.paste(icon, (text_x,text_y))
-
-        text_x += 40
+        img.paste(self.icons["ship"], (text_x,text_y))
+        text_x += self.__LARGE_ICON_SIZE
 
         # Draw the title
         draw.text((text_x,text_y), "Ship Tracker", self.BLUE, font=self.hanken_bold_20)
@@ -142,9 +168,10 @@ class Screen:
         draw.text((text_x,text_y), now.strftime("%A - %d/%m/%y %H:%M"), self.BLUE, font=self.hanken_bold_14)
 
         text_y += 35
+        image_y = text_y
 
         # Draw the picture
-        imgPath = os.path.join(self.imgDir, shipData["mmsi"])
+        imgPath = os.path.join(self.imgDir, self.activeShip["mmsi"])
         if os.path.exists(imgPath):
             pic = Image.open(imgPath)
 
@@ -163,12 +190,12 @@ class Screen:
 
             pic = pic.resize((new_width, new_height), Image.LANCZOS)
 
-            img.paste(pic, (screen_padding+container_padding_horz, text_y))
+            #img.paste(pic, (screen_padding+container_padding_horz, text_y))
 
         text_y += 298
 
         # Draw the ship name
-        text = shipData["name"]
+        text = self.activeShip["name"]
         tx_w,tx_h = self.getTextSize(self.hanken_bold_35,text)
         draw.text((int(self.width/2-tx_w/2),text_y), text, self.BLUE, font=self.hanken_bold_35)
 
@@ -178,38 +205,50 @@ class Screen:
 
         text_y += 45
 
-        cats = ["MMSI","Callsign","Vessel Type"]
-        icons = ["icon_mmsi","icon_callsign","icon_shiptype"]
-        vals = [str(shipData["mmsi"]),shipData["callsign"],self.getVesselType(shipData["type"])]
+        lines = [{
+            "icon": self.icons["mmsi"],
+            "name": "MMSI",
+            "value": str(self.activeShip["mmsi"])
+        },{
+            "icon": self.icons["callsign"],
+            "name": "Callsign",
+            "value": str(self.activeShip["callsign"])
+        },{
+            "icon": self.icons["shiptype"],
+            "name": "Vessel Type",
+            "value": self.getVesselType(self.activeShip["type"])
+        }]
 
-        if "dynamic" in shipData:
-            dynamic = shipData["dynamic"]
+        if "dynamic" in self.activeShip:
+            dynamic = self.activeShip["dynamic"]
 
             if "destination" in dynamic and dynamic["destination"]:
-                cats.append("Destination")
-                icons.append("icon_dest")
-                vals.append(dynamic["destination"])
+                lines.append({
+                    "icon": self.icons["dest"],
+                    "name": "Destination",
+                    "value": dynamic["destination"]
+                })
 
             if "speed" in dynamic:
-                cats.append("Speed")
-                icons.append("icon_speed")
-                vals.append(str(dynamic["speed"])+"kts")
+                lines.append({
+                    "icon": self.icons["speed"],
+                    "name": "Speed",
+                    "value": str(dynamic["speed"])+"kts"
+                })
 
         # Loop Start
-        for idx, k in enumerate(cats):
+        for item in lines:
             text_x = screen_padding+container_padding_horz
 
             # Draw Icon
-            icon = Image.open("icon/"+icons[idx]+".png")
-            icon = self.resizeImage(icon, self.info_icon_size, self.info_icon_size)
-            img.paste(icon, (text_x,text_y))
+            img.paste(item["icon"], (text_x,text_y))
 
             text_x += 30
 
-            # Draw MMSI
-            text = vals[idx]
+            # Draw Text
+            text = item["value"]
             tx_w,tx_h = self.getTextSize(self.hanken_bold_20,text)
-            draw.text((text_x,text_y), k, self.BLUE, font=self.hanken_bold_20)
+            draw.text((text_x,text_y), item["name"], self.BLUE, font=self.hanken_bold_20)
             draw.text((self.width-screen_padding-container_padding_horz-tx_w,text_y), text, self.BLUE, font=self.hanken_bold_20)
 
             text_x = screen_padding+container_padding_horz
@@ -218,6 +257,11 @@ class Screen:
             draw.line([(text_x,text_y),(self.width-text_x,text_y)], fill=self.BLUE, width=2)
 
             text_y += 35
+
+        if self.mode == self.MODE_DARK:
+            img = ImageOps.invert(img)
+        
+        img.paste(pic, (screen_padding+container_padding_horz, image_y))
 
         img = img.convert("RGB")
         img = img.rotate(90,expand=1)
