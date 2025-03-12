@@ -1,5 +1,4 @@
-from inky.auto import auto
-from font_hanken_grotesk import HankenGroteskBold, HankenGroteskMedium
+from font_hanken_grotesk import HankenGroteskBold
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 import os
@@ -40,7 +39,7 @@ VESSEL_SUBCATS = {
     3: "Hazardous (Low)",
     4: "Non-hazardous"
 }
-
+    
 class Screen:
     WHITE="#FFFFFF"
     BLACK="#000000"
@@ -55,7 +54,7 @@ class Screen:
     __LARGE_ICON_SIZE = 40
     __SMALL_ICON_SIZE = 24
 
-    def __init__(self,imgDir,mode = None):
+    def __init__(self,imgDir,renderer,mode = None):
         self.activeShip = None
         self.imgDir = imgDir
         self.mode = mode if mode else self.MODE_LIGHT
@@ -67,10 +66,11 @@ class Screen:
         self.ship_icon_size = 40
         self.info_icon_size = 24
 
-        self.inky = auto(ask_user=True, verbose=False)
+        #self.inky = auto(ask_user=True, verbose=False)
+        self.renderer = renderer
 
-        self.height = self.inky.width
-        self.width = self.inky.height
+        self.height = self.renderer.width
+        self.width = self.renderer.height
 
         self.icons = {}
         self.__loadIcon("ship", "icon_ship.png", self.__LARGE_ICON_SIZE)
@@ -289,7 +289,5 @@ class Screen:
         img.paste(pic, (screen_padding+container_padding_horz, image_y))
 
         img = img.convert("RGB")
-        img = img.rotate(90,expand=1)
 
-        self.inky.set_image(img)
-        self.inky.show()
+        self.renderer.render(img)

@@ -8,6 +8,9 @@ import filter
 import shipdata
 import screen
 import config
+import argparse
+from renderer.image_renderer import ImageRenderer
+from renderer.inky_renderer import InkyRenderer
 
 def on_connect(client, userdata, flags, reason_code, properties):
         print(f"Connected with result code {reason_code}")
@@ -73,6 +76,12 @@ def handle_ship_message(msg):
         
         print(log)
 
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('-noscreen', action='store_const', const=True)
+args = arg_parser.parse_args()
+
+#print(args.noscreen)
+
 tbq = TagBlockQueue()
 queue = NMEAQueue(tbq=tbq)
 
@@ -83,7 +92,8 @@ for zone in config.ZONES:
 shipData = shipdata.ShipData(config.DB_NAME,config.IMG_DIR,config.MAX_DYN_SIZE)
 shipData.initTables()
 
-shipScreen = screen.Screen(config.IMG_DIR)
+renderer = ImageRenderer("output.jpg") if args.noscreen else InkyRenderer()
+shipScreen = screen.Screen(config.IMG_DIR,renderer)
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
