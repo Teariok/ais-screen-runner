@@ -192,30 +192,91 @@ class Screen:
 
             #img.paste(pic, (screen_padding+container_padding_horz, text_y))
         else:
+            shipLen = (self.activeShip["stern"] + self.activeShip["bow"])
+            shipWid = (self.activeShip["port"] + self.activeShip["starboard"])
+
+            if shipLen == 0 or shipWid == 0:
+                return
+            
             maxWidth = self.width - ((screen_padding+container_padding_horz)*2)
             maxHeight = 370 - text_y
 
-            shipScale = 1
+            tl = (screen_padding+container_padding_horz,text_y)
+            tr = (tl[0]+maxWidth,text_y)
+            bl = (tl[0],text_y+maxHeight)
+            br = (tr[0],bl[1])
 
-            shipLen = (self.activeShip["stern"] + self.activeShip["bow"]) * shipScale
-            shipWid = (self.activeShip["port"] + self.activeShip["starboard"]) * shipScale
+            draw.line([tl,tr,br,bl,tl], fill=self.BLUE, width=2)
 
-            halfShipLen = shipLen / 2
-            halfShipWid = shipWid / 2
+            img_padding = 5
+            maxWidth -= img_padding*2
+            maxHeight -= img_padding*2
 
-            midX = maxWidth / 2
-            midY = maxHeight / 2
-
-            pic = Image.new("RGB", (maxWidth, maxHeight), color=self.RED)
+            pic = Image.new("RGB", (maxWidth, maxHeight), color=self.WHITE)
             picDraw = ImageDraw.Draw(pic)
 
-            nose_len = shipLen / 10
+            text_size = self.getTextSize(self.hanken_bold_14,str(shipWid))
+            left_reserve = 5+text_size[1]
 
-            picDraw.line([midX - halfShipLen, midY - halfShipWid, midX + halfShipLen - nose_len, midY - halfShipWid], fill=self.BLUE, width=2)
-            picDraw.line([midX + halfShipLen - nose_len, midY - halfShipWid, midX + halfShipLen, midY], fill=self.BLUE, width=2)
-            picDraw.line([midX - halfShipLen, midY + halfShipWid, midX + halfShipLen - nose_len, midY + halfShipWid], fill=self.BLUE, width=2)
-            picDraw.line([midX + halfShipLen - nose_len, midY + halfShipWid, midX + halfShipLen, midY], fill=self.BLUE, width=2)
-            picDraw.line([midX - halfShipLen, midY - halfShipWid, midX - halfShipLen, midY + halfShipWid], fill=self.BLUE, width=2)
+            inner_padding = 30
+            maxWidth -= (inner_padding*2) + left_reserve
+            maxHeight -= inner_padding*2
+
+            width_ratio = maxWidth / shipLen
+            height_ratio = maxHeight / shipWid
+
+            scale_factor = min(width_ratio, height_ratio)
+
+            shipLen = int(shipLen * scale_factor)
+            shipWid = int(shipWid * scale_factor)
+            
+            img_centre = ((maxWidth/2)+left_reserve, maxHeight/2)
+
+            wh_ratio = 0.6 * (shipWid/shipLen)
+            nose_len = shipLen * wh_ratio
+
+            tl = (inner_padding+img_centre[0] - shipLen/2, inner_padding+img_centre[1] - shipWid/2)
+            tr = (inner_padding+img_centre[0] + shipLen/2 - nose_len, inner_padding+img_centre[1] - shipWid/2)
+            n = (inner_padding+img_centre[0] + shipLen/2, inner_padding+img_centre[1])
+            bl = (inner_padding+img_centre[0] - shipLen/2, inner_padding+img_centre[1] + shipWid/2)
+            br = (inner_padding+img_centre[0] + shipLen/2 - nose_len, inner_padding+img_centre[1] + shipWid/2)
+
+            picDraw.line([tl,tr,n,br,bl,tl], fill=self.BLACK, width=2)
+
+            mast_pos = (tl[0]+self.activeShip["stern"]*scale_factor, tl[1]+self.activeShip["port"]*scale_factor)
+            mast_size = 10
+            picDraw.ellipse([mast_pos[0]-mast_size/2,mast_pos[1]-mast_size/2,mast_pos[0]+mast_size/2,mast_pos[1]+mast_size/2], self.BLACK)
+
+            size_spacing = 5
+
+            picDraw.line([
+                (bl[0], bl[1]+size_spacing),
+                (bl[0], bl[1]+size_spacing*2),
+                (inner_padding+img_centre[0], bl[1]+size_spacing*2),
+                (inner_padding+img_centre[0], bl[1]+size_spacing*3),
+                (inner_padding+img_centre[0], bl[1]+size_spacing*2),
+                (n[0], bl[1]+size_spacing*2),
+                (n[0], bl[1]+size_spacing),
+            ], fill=self.BLACK, width=2)
+
+            text_size = self.getTextSize(self.hanken_bold_14,str(shipLen))
+            picDraw.text((inner_padding+img_centre[0]-(text_size[0]/2), bl[1]+size_spacing*4),str(shipLen), self.BLACK, font=self.hanken_bold_14)
+
+            picDraw.line([
+                (tl[0]-size_spacing, tl[1]),
+                (tl[0]-size_spacing*2, tl[1]),
+                (tl[0]-size_spacing*2, n[1]),
+                (tl[0]-size_spacing*3, n[1]),
+                (tl[0]-size_spacing*2, n[1]),
+                (tl[0]-size_spacing*2, bl[1]),
+                (tl[0]-size_spacing, bl[1]),
+            ], fill=self.BLACK, width=2)
+
+            text_size = self.getTextSize(self.hanken_bold_14,str(shipWid))
+            picDraw.text((tl[0]-text_size[0]-size_spacing*4, n[1]-text_size[1]/2),str(shipWid), self.BLACK, font=self.hanken_bold_14)
+
+            if self.mode == self.MODE_DARK:
+                pic = ImageOps.invert(pic)
 
         text_y += 298
 
@@ -286,7 +347,7 @@ class Screen:
         if self.mode == self.MODE_DARK:
             img = ImageOps.invert(img)
         
-        img.paste(pic, (screen_padding+container_padding_horz, image_y))
+        img.paste(pic, (screen_padding+container_padding_horz+img_padding, image_y+img_padding))
 
         img = img.convert("RGB")
 
