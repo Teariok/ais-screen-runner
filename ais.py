@@ -7,10 +7,10 @@ import json
 import filter
 import shipdata
 import screen
-import config
 import argparse
 from renderer.image_renderer import ImageRenderer
 from renderer.inky_renderer import InkyRenderer
+from dotenv import dotenv_values
 
 def on_connect(client, userdata, flags, reason_code, properties):
         print(f"Connected with result code {reason_code}")
@@ -76,18 +76,19 @@ def handle_ship_message(msg):
         
         print(log)
 
+config = dotenv_values(".env")
+print(config)
+
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('-noscreen', action='store_const', const=True)
 args = arg_parser.parse_args()
-
-#print(args.noscreen)
 
 tbq = TagBlockQueue()
 queue = NMEAQueue(tbq=tbq)
 
 shipFilter = filter.ShipFilter()
-for zone in config.ZONES:
-        shipFilter.addZone(zone)
+#for zone in config.ZONES:
+#        shipFilter.addZone(zone)
 
 shipData = shipdata.ShipData(config.DB_NAME,config.IMG_DIR,config.MAX_DYN_SIZE)
 shipData.initTables()
