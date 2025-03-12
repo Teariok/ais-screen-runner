@@ -191,6 +191,31 @@ class Screen:
             pic = pic.resize((new_width, new_height), Image.LANCZOS)
 
             #img.paste(pic, (screen_padding+container_padding_horz, text_y))
+        else:
+            maxWidth = self.width - ((screen_padding+container_padding_horz)*2)
+            maxHeight = 370 - text_y
+
+            shipScale = 1
+
+            shipLen = (self.activeShip["stern"] + self.activeShip["bow"]) * shipScale
+            shipWid = (self.activeShip["port"] + self.activeShip["starboard"]) * shipScale
+
+            halfShipLen = shipLen / 2
+            halfShipWid = shipWid / 2
+
+            midX = maxWidth / 2
+            midY = maxHeight / 2
+
+            pic = Image.new("RGB", (maxWidth, maxHeight), color=self.RED)
+            picDraw = ImageDraw.Draw(pic)
+
+            nose_len = shipLen / 10
+
+            picDraw.line([midX - halfShipLen, midY - halfShipWid, midX + halfShipLen - nose_len, midY - halfShipWid], fill=self.BLUE, width=2)
+            picDraw.line([midX + halfShipLen - nose_len, midY - halfShipWid, midX + halfShipLen, midY], fill=self.BLUE, width=2)
+            picDraw.line([midX - halfShipLen, midY + halfShipWid, midX + halfShipLen - nose_len, midY + halfShipWid], fill=self.BLUE, width=2)
+            picDraw.line([midX + halfShipLen - nose_len, midY + halfShipWid, midX + halfShipLen, midY], fill=self.BLUE, width=2)
+            picDraw.line([midX - halfShipLen, midY - halfShipWid, midX - halfShipLen, midY + halfShipWid], fill=self.BLUE, width=2)
 
         text_y += 298
 
