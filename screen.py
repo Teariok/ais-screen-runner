@@ -63,10 +63,6 @@ class Screen:
         self.hanken_bold_20 = ImageFont.truetype(HankenGroteskBold, 20)
         self.hanken_bold_14 = ImageFont.truetype(HankenGroteskBold, 14)
 
-        self.ship_icon_size = 40
-        self.info_icon_size = 24
-
-        #self.inky = auto(ask_user=True, verbose=False)
         self.renderer = renderer
 
         self.height = self.renderer.width
