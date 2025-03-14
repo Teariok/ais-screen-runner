@@ -20,7 +20,8 @@ def handle_ship_message(msg):
 
 def handle_zone_change(ship,zone_prev):
     print(f"{ship["name"]} changed zone from {zone_prev} to {ship.get("zone","None")}")
-    screen.displayShip(ship)
+    if ship.get("zone", None) != None:
+        screen.displayShip(ship)
 
 config = dotenv_values(".env")
 
@@ -33,7 +34,7 @@ ship_tracker = ShipTracker(int(config["MAX_DYN_SIZE"]), config["DB_NAME"])
 ship_tracker.on_zone_change = handle_zone_change
 
 # Set the notification zones up from the env
-zones = config["ZONES"].strip('()').split('),(')
+zones = config.get("ZONES","").strip('()').split('),(')
 for zone in zones:
     parts = zone.split(',')
     ship_tracker.add_zone((parts[0].strip(), float(parts[1]), float(parts[2]), float(parts[3])))
