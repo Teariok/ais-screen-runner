@@ -171,6 +171,7 @@ class Screen:
         image_y = text_y
 
         # Draw the picture
+        img_padding = 0
         imgPath = os.path.join(self.imgDir, self.activeShip["mmsi"])
         if os.path.exists(imgPath):
             pic = Image.open(imgPath)
