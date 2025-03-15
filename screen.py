@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 import os
 import math
+import logging
 
 VESSEL_TYPES = {
     -1: "Unknown",
@@ -55,6 +56,8 @@ class Screen:
     __SMALL_ICON_SIZE = 24
 
     def __init__(self,imgDir,renderer,mode = None):
+        self.logger = logging.getLogger(__name__)
+
         self.activeShip = None
         self.imgDir = imgDir
         self.mode = mode if mode else self.MODE_LIGHT
@@ -123,7 +126,9 @@ class Screen:
         return pic.resize((new_width, new_height), Image.LANCZOS)
 
     def displayShip(self, shipData):
+        self.logger.info(f"Request to display ship {shipData.get('mmsi',None)}")
         if self.activeShip is not None and self.activeShip["mmsi"] == shipData["mmsi"]:
+            self.logger.info("Skip display - ship is already displayed")
             return
 
         self.activeShip = shipData
@@ -133,8 +138,7 @@ class Screen:
         if self.activeShip == None:
             return
         
-        #print("Draw Ship")
-        #print(self.activeShip)
+        self.logger.info(f"Draw Ship {self.activeShip}")
 
         img = Image.new("RGB", (self.width,self.height), color=self.BLUE)
         draw = ImageDraw.Draw(img)

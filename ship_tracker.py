@@ -1,9 +1,12 @@
 import sqlite3
 import time
 import math
+import logging
 
 class ShipTracker:
     def __init__(self,track_limit,db_path):
+        self.logger = logging.getLogger(__name__)
+
         self.vessels = {}
         self.max_tracked = track_limit
         self.zones = []
@@ -71,7 +74,7 @@ class ShipTracker:
             if ship.get("zone", None) != zone_prev:
                 self.on_zone_change(ship, zone_prev)
 
-        print(f"SHIP: {ship.get('name','Unknown')} {mmsi}, Zone: {ship.get('zone', 'None')}")
+        self.logger.info(f"SHIP: {ship.get('name','Unknown')} {mmsi}, Zone: {ship.get('zone', 'None')}")
 
     def add_zone(self,zone_data):
         self.zones.append(zone_data)
@@ -91,7 +94,7 @@ class ShipTracker:
             EARTH_RADIUS = 6371
             distance = EARTH_RADIUS * c
             
-            print(f"Distance {distance} Radius {radius}")
+            self.logger.info(f"Distance {distance} Radius {radius}")
             if distance <= radius:
                 return name
 
@@ -141,7 +144,7 @@ class ShipTracker:
 
             return result
         except sqlite3.Error as e:
-            print(f"SQLite error: {e}")
+            self.logger.exception("SQLite error", exc_info=e)
             self.db_conn.rollback()
 
         return None

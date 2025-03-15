@@ -2,9 +2,12 @@ import paho.mqtt.client as mqtt
 from pyais.stream import TagBlockQueue
 from pyais.queue import NMEAQueue
 import json
+import logging
 
 class MessageProcessor:
     def __init__(self, mqtt_addr, mqtt_port, mqtt_topic):
+        self.logger = logging.getLogger(__name__)
+
         self.mqtt_addr = mqtt_addr
         self.mqtt_port = mqtt_port
         self.mqtt_topic = mqtt_topic
@@ -18,12 +21,12 @@ class MessageProcessor:
         self.mqttc.on_message = self.__on_message
 
     def begin_processing(self):
-        print(f"Connect to {self.mqtt_addr}:{self.mqtt_port}")
+        self.logger.info(f"Connect to {self.mqtt_addr}:{self.mqtt_port}")
         self.mqttc.connect(self.mqtt_addr, self.mqtt_port, 60)
         self.mqttc.loop_forever()
 
     def __on_connected(self, client, userdata, flags, reason_code, properties):
-        print(f"Connected with result code {reason_code}")
+        self.logger.info(f"Connected with result code {reason_code}")
         client.subscribe(self.mqtt_topic)
 
     def __on_message(self, client, userdata, msg):
