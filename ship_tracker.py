@@ -56,6 +56,7 @@ class ShipTracker:
         dynamic_data = {k: v for k, v in message.items() if k not in keyFilter}
 
         ship_prev = self.vessels.get(mmsi, {})
+        zone_prev = ship_prev.get("zone", None)
 
         if "lat" in dynamic_data and "lon" in dynamic_data:
             ship["zone"] = self.check_zones(dynamic_data["lat"],dynamic_data["lon"])
@@ -65,12 +66,12 @@ class ShipTracker:
         # Trim the tracked vessel list down if it's over the max size
         self.vessels = dict(sorted(self.vessels.items(), key=lambda item: item[1]['ts'], reverse=True)[:self.max_tracked])
 
+        ship = self.vessels[mmsi]
         if self.on_zone_change:
-            zone_prev = ship_prev.get("zone", None)
             if ship.get("zone", None) != zone_prev:
                 self.on_zone_change(ship, zone_prev)
 
-        print(f"SHIP: {ship.get("name","Unknown")} {mmsi}, Zone: {ship.get("zone", "None")}")
+        print(f"SHIP: {ship.get('name','Unknown')} {mmsi}, Zone: {ship.get('zone', 'None')}")
 
     def add_zone(self,zone_data):
         self.zones.append(zone_data)

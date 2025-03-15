@@ -19,7 +19,7 @@ def handle_ship_message(msg):
     ship_tracker.update_vessel(data)
 
 def handle_zone_change(ship,zone_prev):
-    print(f"{ship["name"]} changed zone from {zone_prev} to {ship.get("zone","None")}")
+    print(f"{ship['name']} changed zone from {zone_prev} to {ship.get('zone','None')}")
     if ship.get("zone", None) != None:
         screen.displayShip(ship)
 
