@@ -44,7 +44,7 @@ class ShipTracker:
         # Ship MMSI should be 9 or more digits. Under 9 means it's
         # probably a base station, navigation aid etc
         if len(str(mmsi)) < 9:
-            print("MMSI is not a ship. Skip update.")
+            self.logger.info(f"MMSI {str(mmsi)} is not a ship. Skip update.")
             return
         
         # Only these 2 message types have static data
@@ -81,7 +81,7 @@ class ShipTracker:
 
     def check_zones(self, ship_lat, ship_lon):
         if len(self.zones) == 0:
-            print("No Zones")
+            self.logger.info("Zone check request but no zones present")
             return None
         
         for zone in self.zones:

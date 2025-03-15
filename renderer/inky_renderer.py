@@ -4,8 +4,8 @@ class InkyRenderer:
     def __init__(self):
         self.inky = auto(ask_user=True, verbose=False)
 
-        self.height = self.inky.width
-        self.width = self.inky.height
+        self.height = self.inky.height
+        self.width = self.inky.width
         return
 
     def render(self, img):
