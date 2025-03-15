@@ -301,22 +301,19 @@ class Screen:
             "value": self.getVesselType(self.activeShip["type"])
         }]
 
-        if "dynamic" in self.activeShip:
-            dynamic = self.activeShip["dynamic"]
+        if "destination" in self.activeShip:
+            lines.append({
+                "icon": self.icons["dest"],
+                "name": "Destination",
+                "value": self.activeShip["destination"]
+            })
 
-            if "destination" in dynamic and dynamic["destination"]:
-                lines.append({
-                    "icon": self.icons["dest"],
-                    "name": "Destination",
-                    "value": dynamic["destination"]
-                })
-
-            if "speed" in dynamic:
-                lines.append({
-                    "icon": self.icons["speed"],
-                    "name": "Speed",
-                    "value": str(dynamic["speed"])+"kts"
-                })
+        if "speed" in self.activeShip:
+            lines.append({
+                "icon": self.icons["speed"],
+                "name": "Speed",
+                "value": str(self.activeShip["speed"])+"kts"
+            })
 
         # Loop Start
         for item in lines:
