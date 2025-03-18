@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 from dotenv import dotenv_values
 from message_processor import MessageProcessor
 from ship_tracker import ShipTracker
@@ -9,20 +8,24 @@ from renderer.image_renderer import ImageRenderer
 from renderer.inky_renderer import InkyRenderer
 import logging
 import os
+from queue import Queue 
+from threading import Thread
 
-def handle_ship_message(msg):
-    try:
-        data = json.loads(msg)
-    except json.JSONDecodeError as e:
-        logger.exception(f"Error decoding JSON", exc_info=e)
-        return
+def begin_message_processing():
+    message_processor = MessageProcessor(config["MQTT_ADDR"], int(config["MQTT_PORT"]), config["MQTT_AIS_TOPIC"], ais_message_queue)
+    message_processor.begin_processing()
 
-    ship_tracker.update_vessel(data)
+def begin_ship_tracking():
+    # Init the tracker to keep a record of vessels we've seen
+    ship_tracker = ShipTracker(int(config["MAX_DYN_SIZE"]), config["DB_NAME"], ais_message_queue, vessel_update_queue)
 
-def handle_zone_change(ship,zone_prev):
-    logger.info(f"{ship['name']} changed zone from {zone_prev} to {ship.get('zone','None')}")
-    if ship.get("zone", None) != None:
-        screen.displayShip(ship)
+    # Set the notification zones up from the env
+    zones = config.get("ZONES","").strip('()').split('),(')
+    for zone in zones:
+        parts = zone.split(',')
+        ship_tracker.add_zone((parts[0].strip(), float(parts[1]), float(parts[2]), float(parts[3])))
+
+    ship_tracker.begin_processing()
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('ais.log'),logging.StreamHandler()])
@@ -33,22 +36,28 @@ if not os.path.exists(".env"):
 
 config = dotenv_values(".env")
 
-# Init the tracker to keep a record of vessels we've seen
-ship_tracker = ShipTracker(int(config["MAX_DYN_SIZE"]), config["DB_NAME"])
-ship_tracker.on_zone_change = handle_zone_change
-
-# Set the notification zones up from the env
-zones = config.get("ZONES","").strip('()').split('),(')
-for zone in zones:
-    parts = zone.split(',')
-    ship_tracker.add_zone((parts[0].strip(), float(parts[1]), float(parts[2]), float(parts[3])))
-
-no_screen = False
+no_screen = True
 if no_screen:
     screen = Screen(config["IMG_DIR"],ImageRenderer("output.jpg"))
 else:
     screen = Screen(config["IMG_DIR"],InkyRenderer())
 
-message_processor = MessageProcessor(config["MQTT_ADDR"], int(config["MQTT_PORT"]), config["MQTT_AIS_TOPIC"])
-message_processor.on_message = handle_ship_message
-message_processor.begin_processing()
+ais_message_queue = Queue()
+vessel_update_queue = Queue()
+
+mpt = Thread(target=begin_message_processing)
+mpt.start()
+
+stt = Thread(target=begin_ship_tracking)
+stt.start()
+
+while True:
+    msg = vessel_update_queue.get()
+    if msg != None and msg[0] == "zone":
+        ship = msg[1]
+        zone_prev = msg[2]
+
+        logger.info(f"{ship['name']} changed zone from {zone_prev} to {ship.get('zone','None')}")
+        
+        if ship.get("zone", None) != None:
+            screen.displayShip(ship)

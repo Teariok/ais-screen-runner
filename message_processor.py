@@ -5,13 +5,13 @@ import json
 import logging
 
 class MessageProcessor:
-    def __init__(self, mqtt_addr, mqtt_port, mqtt_topic):
+    def __init__(self, mqtt_addr, mqtt_port, mqtt_topic, message_handler):
         self.logger = logging.getLogger(__name__)
 
         self.mqtt_addr = mqtt_addr
         self.mqtt_port = mqtt_port
         self.mqtt_topic = mqtt_topic
-        self.on_message = None
+        self.message_handler = message_handler
 
         tbq = TagBlockQueue()
         self.message_queue = NMEAQueue(tbq=tbq)
@@ -34,7 +34,7 @@ class MessageProcessor:
             self.__handle_message(msg)
 
     def __handle_message(self, msg):
-        if not callable(self.on_message):
+        if self.message_handler == None:
             raise TypeError("on_message must be set to a callback function")
 
         self.message_queue.put_line(msg.payload)
@@ -50,4 +50,5 @@ class MessageProcessor:
                 if isinstance(value, bytes):
                     decoded_sentence[key] = value.decode('utf-8', errors='ignore')
                 
-            self.on_message(json.dumps(decoded_sentence))
+            self.message_handler.put(json.dumps(decoded_sentence))
+            #self.on_message(json.dumps(decoded_sentence))

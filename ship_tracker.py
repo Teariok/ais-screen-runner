@@ -2,15 +2,17 @@ import sqlite3
 import time
 import math
 import logging
+import json
 
 class ShipTracker:
-    def __init__(self,track_limit,db_path):
+    def __init__(self,track_limit,db_path,message_queue,vessel_queue):
         self.logger = logging.getLogger(__name__)
 
         self.vessels = {}
         self.max_tracked = track_limit
         self.zones = []
-        self.on_zone_change = None
+        self.message_queue = message_queue
+        self.vessel_queue = vessel_queue
 
         self.__init_database(db_path)
 
@@ -37,6 +39,21 @@ class ShipTracker:
                 last_sight INTEGER
             );""")
     
+    def begin_processing(self):
+        while True:
+            msg = self.message_queue.get()
+
+            if msg == None:
+                continue
+
+            try:
+                data = json.loads(msg)
+            except json.JSONDecodeError as e:
+                self.logger.exception(f"Error decoding JSON", exc_info=e)
+                continue
+
+            self.update_vessel(data)
+
     def update_vessel(self,message):
         msg_type = message["msg_type"]
         mmsi = message["mmsi"]
@@ -70,9 +87,9 @@ class ShipTracker:
         self.vessels = dict(sorted(self.vessels.items(), key=lambda item: item[1]['ts'], reverse=True)[:self.max_tracked])
 
         ship = self.vessels[mmsi]
-        if self.on_zone_change:
+        if self.vessel_queue != None:
             if ship.get("zone", None) != zone_prev:
-                self.on_zone_change(ship, zone_prev)
+                self.vessel_queue.put(("zone",ship,zone_prev))
 
         self.logger.info(f"SHIP: {ship.get('name','Unknown')} {mmsi}, Zone: {ship.get('zone', 'None')}")
 

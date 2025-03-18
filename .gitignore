@@ -3,3 +3,4 @@ vessels
 output.jpg
 .env
 *.log
+.vscode
