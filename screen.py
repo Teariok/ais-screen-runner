@@ -55,12 +55,13 @@ class Screen:
     __LARGE_ICON_SIZE = 40
     __SMALL_ICON_SIZE = 24
 
-    def __init__(self,imgDir,renderer,mode = None):
+    def __init__(self,imgDir,renderer,vessel_update_queue,mode = None):
         self.logger = logging.getLogger(__name__)
 
         self.activeShip = None
         self.imgDir = imgDir
         self.mode = mode if mode else self.MODE_LIGHT
+        self.vessel_queue = vessel_update_queue
 
         self.hanken_bold_35 = ImageFont.truetype(HankenGroteskBold, 35)
         self.hanken_bold_20 = ImageFont.truetype(HankenGroteskBold, 20)
@@ -82,6 +83,20 @@ class Screen:
     def __loadIcon(self, key, filename, size):
         icon = Image.open(os.path.join("icon", filename))
         self.icons[key] = self.resizeImage(icon, size, size)
+
+    def begin_processing(self):
+        while True:
+            msg = self.vessel_queue.get()
+            if msg != None and msg[0] == "zone":
+                ship = msg[1]
+                zone_prev = msg[2]
+
+                self.logger.info(f"{ship['name']} changed zone from {zone_prev} to {ship.get('zone','None')}")
+            
+                if ship.get("zone", None) != None:
+                    self.displayShip(ship)
+            else:
+                self.logger.warning(f"Uknown message: {msg}")
 
     def setMode(self, mode):
         if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):

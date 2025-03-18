@@ -27,6 +27,14 @@ def begin_ship_tracking():
 
     ship_tracker.begin_processing()
 
+def begin_screen_updates(no_screen = True):
+    if no_screen:
+        screen = Screen(config["IMG_DIR"],ImageRenderer("output.jpg"),vessel_update_queue)
+    else:
+        screen = Screen(config["IMG_DIR"],InkyRenderer(), vessel_update_queue)
+
+    screen.begin_processing()
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('ais.log'),logging.StreamHandler()])
 
@@ -35,12 +43,6 @@ if not os.path.exists(".env"):
     os._exit(-1)
 
 config = dotenv_values(".env")
-
-no_screen = True
-if no_screen:
-    screen = Screen(config["IMG_DIR"],ImageRenderer("output.jpg"))
-else:
-    screen = Screen(config["IMG_DIR"],InkyRenderer())
 
 ais_message_queue = Queue()
 vessel_update_queue = Queue()
@@ -51,13 +53,8 @@ mpt.start()
 stt = Thread(target=begin_ship_tracking)
 stt.start()
 
-while True:
-    msg = vessel_update_queue.get()
-    if msg != None and msg[0] == "zone":
-        ship = msg[1]
-        zone_prev = msg[2]
+sut = Thread(target=begin_screen_updates)
+sut.start()
 
-        logger.info(f"{ship['name']} changed zone from {zone_prev} to {ship.get('zone','None')}")
-        
-        if ship.get("zone", None) != None:
-            screen.displayShip(ship)
+while True:
+    pass
