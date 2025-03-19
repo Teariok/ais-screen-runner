@@ -65,7 +65,7 @@ class ShipTracker:
             return
         
         # Only these 2 message types have static data
-        has_static_data = msg_type == 5 or msg_type == 24
+        has_static_data = msg_type == 5# or msg_type == 24
 
         # Make sure the database has a record of this ship.
         ship = self.__record_ship(message, has_static_data)

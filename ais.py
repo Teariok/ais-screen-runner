@@ -8,7 +8,7 @@ from renderer.image_renderer import ImageRenderer
 from renderer.inky_renderer import InkyRenderer
 import logging
 import os
-from queue import Queue 
+from queue import Queue
 from threading import Thread
 
 def begin_message_processing():
