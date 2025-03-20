@@ -6,6 +6,7 @@ from ship_tracker import ShipTracker
 from screen import Screen
 from renderer.image_renderer import ImageRenderer
 from renderer.inky_renderer import InkyRenderer
+from ship_zone_screen import ShipZoneScreen
 import logging
 import os
 from queue import Queue
@@ -28,12 +29,11 @@ def begin_ship_tracking():
     ship_tracker.begin_processing()
 
 def begin_screen_updates(no_screen = True):
-    if no_screen:
-        screen = Screen(config["IMG_DIR"],ImageRenderer("output.jpg"),vessel_update_queue)
-    else:
-        screen = Screen(config["IMG_DIR"],InkyRenderer(), vessel_update_queue)
+    renderer = ImageRenderer("output.jpg") if no_screen else InkyRenderer()
+    screens = [ShipZoneScreen(config["IMG_DIR"], renderer)]
+    screen_manager = Screen(screens, vessel_update_queue)
 
-    screen.begin_processing()
+    screen_manager.begin_processing()
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('ais.log'),logging.StreamHandler()])

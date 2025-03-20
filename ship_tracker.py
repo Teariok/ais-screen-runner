@@ -92,6 +92,7 @@ class ShipTracker:
                 self.vessel_queue.put(("zone",ship,zone_prev))
 
         self.logger.info(f"SHIP: {ship.get('name','Unknown')} {mmsi}, Zone: {ship.get('zone', 'None')}")
+        self.vessel_queue.put(("update",ship))
 
     def add_zone(self,zone_data):
         self.zones.append(zone_data)
