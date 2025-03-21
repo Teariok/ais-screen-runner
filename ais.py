@@ -3,10 +3,11 @@
 from dotenv import dotenv_values
 from message_processor import MessageProcessor
 from ship_tracker import ShipTracker
-from screen import Screen
+from screen_manager import ScreenManager
 from renderer.image_renderer import ImageRenderer
 from renderer.inky_renderer import InkyRenderer
-from ship_zone_screen import ShipZoneScreen
+from screen.ship_zone_screen import ShipZoneScreen
+from screen.ship_table_screen import ShipTableScreen
 import logging
 import os
 from queue import Queue
@@ -30,8 +31,11 @@ def begin_ship_tracking():
 
 def begin_screen_updates(no_screen = True):
     renderer = ImageRenderer("output.jpg") if no_screen else InkyRenderer()
-    screens = [ShipZoneScreen(config["IMG_DIR"], renderer)]
-    screen_manager = Screen(screens, vessel_update_queue)
+    screens = [
+        ShipTableScreen(config["IMG_DIR"], renderer),
+        ShipZoneScreen(config["IMG_DIR"], renderer)
+    ]
+    screen_manager = ScreenManager(screens, vessel_update_queue)
 
     screen_manager.begin_processing()
 

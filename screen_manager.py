@@ -1,11 +1,12 @@
 import logging
     
-class Screen:
+class ScreenManager:
     def __init__(self,screens,vessel_queue):
         self.logger = logging.getLogger(__name__)
         self.screens = screens
-        self.activeScreen = 0
+        self.active_screen = 0
         self.vessel_queue = vessel_queue
+        self.screens[self.active_screen].set_active(True)
 
     def begin_processing(self):
         while True:
@@ -13,9 +14,10 @@ class Screen:
             if msg == None:
                 continue
 
-            self.screens[self.activeScreen].update(msg)
+            for screen in self.screens:
+                screen.update(msg)
 
-    def setMode(self, mode):
+    def set_mode(self, mode):
         if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):
             self.mode = mode
             self._renderScreen()
