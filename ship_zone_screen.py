@@ -55,11 +55,11 @@ class ShipZoneScreen:
     __LARGE_ICON_SIZE = 40
     __SMALL_ICON_SIZE = 24
 
-    def __init__(self,imgDir,renderer):
+    def __init__(self,img_dir,renderer):
         self.logger = logging.getLogger(__name__)
 
-        self.activeShip = None
-        self.imgDir = imgDir
+        self.visible_ship = None
+        self.img_dir = img_dir
         self.mode = self.MODE_LIGHT
 
         self.hanken_bold_35 = ImageFont.truetype(HankenGroteskBold, 35)
@@ -71,17 +71,22 @@ class ShipZoneScreen:
         self.height = self.renderer.width
         self.width = self.renderer.height
 
-        self.icons = {}
-        self.__loadIcon("ship", "icon_ship.png", self.__LARGE_ICON_SIZE)
-        self.__loadIcon("mmsi", "icon_mmsi.png", self.__SMALL_ICON_SIZE)
-        self.__loadIcon("callsign", "icon_callsign.png", self.__SMALL_ICON_SIZE)
-        self.__loadIcon("shiptype", "icon_shiptype.png", self.__SMALL_ICON_SIZE)
-        self.__loadIcon("dest", "icon_dest.png", self.__SMALL_ICON_SIZE)
-        self.__loadIcon("speed", "icon_speed.png", self.__SMALL_ICON_SIZE)
+        self.active = False
 
-    def __loadIcon(self, key, filename, size):
+        self.icons = {}
+        self.__load_icon("ship", "icon_ship.png", self.__LARGE_ICON_SIZE)
+        self.__load_icon("mmsi", "icon_mmsi.png", self.__SMALL_ICON_SIZE)
+        self.__load_icon("callsign", "icon_callsign.png", self.__SMALL_ICON_SIZE)
+        self.__load_icon("shiptype", "icon_shiptype.png", self.__SMALL_ICON_SIZE)
+        self.__load_icon("dest", "icon_dest.png", self.__SMALL_ICON_SIZE)
+        self.__load_icon("speed", "icon_speed.png", self.__SMALL_ICON_SIZE)
+
+    def __load_icon(self, key, filename, size):
         icon = Image.open(os.path.join("icon", filename))
-        self.icons[key] = self.resizeImage(icon, size, size)
+        self.icons[key] = self.__resize_image(icon, size, size)
+
+    def set_active(self, active):
+        self.active = active
 
     def update(self, msg):
         if msg[0] == "zone":
@@ -91,18 +96,18 @@ class ShipZoneScreen:
             self.logger.info(f"{ship['name']} changed zone from {zone_prev} to {ship.get('zone','None')}")
         
             if ship.get("zone", None) != None:
-                self.displayShip(ship)
+                self.__display_ship(ship)
 
-    def setMode(self, mode):
+    def set_mode(self, mode):
         if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):
             self.mode = mode
-            self._renderScreen()
+            self.__renderScreen()
 
-    def getTextSize(self, font, text):
+    def __get_text_size(self, font, text):
         _, _, right, bottom = font.getbbox(text)
         return (right, bottom)
 
-    def getVesselType(self, value):
+    def __get_vessel_type(self, value):
         vessel_type = VESSEL_TYPES.get(value)
 
         if vessel_type:
@@ -122,11 +127,11 @@ class ShipZoneScreen:
 
         return vessel_type
 
-    def resizeImage(self, pic, maxWidth, maxHeight):
+    def __resize_image(self, pic, max_width, max_height):
         original_width, original_height = pic.size
 
-        width_ratio = maxWidth / original_width
-        height_ratio = maxHeight / original_height
+        width_ratio = max_width / original_width
+        height_ratio = max_height / original_height
 
         scale_factor = min(width_ratio, height_ratio)
 
@@ -135,20 +140,20 @@ class ShipZoneScreen:
 
         return pic.resize((new_width, new_height), Image.LANCZOS)
 
-    def displayShip(self, shipData):
-        self.logger.info(f"Request to display ship {shipData.get('mmsi',None)}")
-        if self.activeShip is not None and self.activeShip["mmsi"] == shipData["mmsi"]:
+    def __display_ship(self, ship_data):
+        self.logger.info(f"Request to display ship {ship_data.get('mmsi',None)}")
+        if self.visible_ship is not None and self.visible_ship["mmsi"] == ship_data["mmsi"]:
             self.logger.info("Skip display - ship is already displayed")
             return
 
-        self.activeShip = shipData
-        self._renderScreen()
+        self.visible_ship = ship_data
+        self.__render_screen()
 
-    def _renderScreen(self):
-        if self.activeShip == None:
+    def __render_screen(self):
+        if not self.active or self.visible_ship == None:
             return
         
-        self.logger.info(f"Draw Ship {self.activeShip}")
+        self.logger.info(f"Draw Ship {self.visible_ship}")
 
         img = Image.new("RGB", (self.width,self.height), color=self.BLUE)
         draw = ImageDraw.Draw(img)
@@ -182,85 +187,75 @@ class ShipZoneScreen:
 
         # Draw the picture
         img_padding = 0
-        imgPath = os.path.join(self.imgDir, self.activeShip["mmsi"])
+        imgPath = os.path.join(self.img_dir, self.visible_ship["mmsi"])
         if os.path.exists(imgPath):
             pic = Image.open(imgPath)
 
-            maxWidth = self.width - ((screen_padding+container_padding_horz)*2)
-            maxHeight = 400 #298 - text_y
+            max_width = self.width - ((screen_padding+container_padding_horz)*2)
+            max_height = 400 #298 - text_y
 
-            original_width, original_height = pic.size
-
-            width_ratio = maxWidth / original_width
-            height_ratio = maxHeight / original_height
-
-            scale_factor = min(width_ratio, height_ratio)
-
-            new_width = int(original_width * scale_factor)
-            new_height = int(original_height * scale_factor)
-
-            pic = pic.resize((new_width, new_height), Image.LANCZOS)
+            pic = self.__resize_image(pic, max_width, max_height)
 
             #img.paste(pic, (screen_padding+container_padding_horz, text_y))
         else:
-            shipLen = (self.activeShip["stern"] + self.activeShip["bow"])
-            shipWid = (self.activeShip["port"] + self.activeShip["starboard"])
+            ship_len = (self.visible_ship["stern"] + self.visible_ship["bow"])
+            ship_wid = (self.visible_ship["port"] + self.visible_ship["starboard"])
 
-            if shipLen == 0 or shipWid == 0:
+            if ship_len == 0 or ship_wid == 0:
                 return
             
-            maxWidth = self.width - ((screen_padding+container_padding_horz)*2)
-            maxHeight = 370 - text_y
+            max_width = self.width - ((screen_padding+container_padding_horz)*2)
+            max_height = 370 - text_y
 
             tl = (screen_padding+container_padding_horz,text_y)
-            tr = (tl[0]+maxWidth,text_y)
-            bl = (tl[0],text_y+maxHeight)
+            tr = (tl[0]+max_width,text_y)
+            bl = (tl[0],text_y+max_height)
             br = (tr[0],bl[1])
 
             draw.line([tl,tr,br,bl,tl], fill=self.BLUE, width=2)
 
             img_padding = 5
-            maxWidth -= img_padding*2
-            maxHeight -= img_padding*2
+            max_width -= img_padding*2
+            max_height -= img_padding*2
 
-            pic = Image.new("RGB", (maxWidth, maxHeight), color=self.WHITE)
-            picDraw = ImageDraw.Draw(pic)
+            pic = Image.new("RGB", (max_width, max_height), color=self.WHITE)
+            pic_draw = ImageDraw.Draw(pic)
 
-            text_size = self.getTextSize(self.hanken_bold_14,str(shipWid))
+            text_size = self.__get_text_size(self.hanken_bold_14,str(ship_wid))
             left_reserve = 5+text_size[1]
 
             inner_padding = 30
-            maxWidth -= (inner_padding*2) + left_reserve
-            maxHeight -= inner_padding*2
+            max_width -= (inner_padding*2) + left_reserve
+            max_height -= inner_padding*2
 
-            width_ratio = maxWidth / shipLen
-            height_ratio = maxHeight / shipWid
+            width_ratio = max_width / ship_len
+            height_ratio = max_height / ship_wid
 
             scale_factor = min(width_ratio, height_ratio)
 
-            shipLen = int(shipLen * scale_factor)
-            shipWid = int(shipWid * scale_factor)
+            ship_len = int(ship_len * scale_factor)
+            ship_wid = int(ship_wid * scale_factor)
             
-            img_centre = ((maxWidth/2)+left_reserve, maxHeight/2)
+            img_centre = ((max_width/2)+left_reserve, max_height/2)
 
-            wh_ratio = 0.6 * (shipWid/shipLen)
-            nose_len = shipLen * wh_ratio
+            wh_ratio = 0.6 * (ship_wid/ship_len)
+            nose_len = ship_len * wh_ratio
 
-            tl = (inner_padding+img_centre[0] - shipLen/2, inner_padding+img_centre[1] - shipWid/2)
-            tr = (inner_padding+img_centre[0] + shipLen/2 - nose_len, inner_padding+img_centre[1] - shipWid/2)
-            n = (inner_padding+img_centre[0] + shipLen/2, inner_padding+img_centre[1])
-            bl = (inner_padding+img_centre[0] - shipLen/2, inner_padding+img_centre[1] + shipWid/2)
-            br = (inner_padding+img_centre[0] + shipLen/2 - nose_len, inner_padding+img_centre[1] + shipWid/2)
+            tl = (inner_padding+img_centre[0] - ship_len/2, inner_padding+img_centre[1] - ship_wid/2)
+            tr = (inner_padding+img_centre[0] + ship_len/2 - nose_len, inner_padding+img_centre[1] - ship_wid/2)
+            n = (inner_padding+img_centre[0] + ship_len/2, inner_padding+img_centre[1])
+            bl = (inner_padding+img_centre[0] - ship_len/2, inner_padding+img_centre[1] + ship_wid/2)
+            br = (inner_padding+img_centre[0] + ship_len/2 - nose_len, inner_padding+img_centre[1] + ship_wid/2)
 
-            picDraw.line([tl,tr,n,br,bl,tl], fill=self.BLACK, width=2)
+            pic_draw.line([tl,tr,n,br,bl,tl], fill=self.BLACK, width=2)
 
-            mast_pos = (tl[0]+self.activeShip["stern"]*scale_factor, tl[1]+self.activeShip["port"]*scale_factor)
+            mast_pos = (tl[0]+self.visible_ship["stern"]*scale_factor, tl[1]+self.visible_ship["port"]*scale_factor)
             mast_size = 10
-            picDraw.ellipse([mast_pos[0]-mast_size/2,mast_pos[1]-mast_size/2,mast_pos[0]+mast_size/2,mast_pos[1]+mast_size/2], self.BLACK)
+            pic_draw.ellipse([mast_pos[0]-mast_size/2,mast_pos[1]-mast_size/2,mast_pos[0]+mast_size/2,mast_pos[1]+mast_size/2], self.BLACK)
 
             size_spacing = 5
 
-            picDraw.line([
+            pic_draw.line([
                 (bl[0], bl[1]+size_spacing),
                 (bl[0], bl[1]+size_spacing*2),
                 (inner_padding+img_centre[0], bl[1]+size_spacing*2),
@@ -270,10 +265,10 @@ class ShipZoneScreen:
                 (n[0], bl[1]+size_spacing),
             ], fill=self.BLACK, width=2)
 
-            text_size = self.getTextSize(self.hanken_bold_14,str(shipLen))
-            picDraw.text((inner_padding+img_centre[0]-(text_size[0]/2), bl[1]+size_spacing*4),str(shipLen), self.BLACK, font=self.hanken_bold_14)
+            text_size = self.__get_text_size(self.hanken_bold_14,str(ship_len))
+            pic_draw.text((inner_padding+img_centre[0]-(text_size[0]/2), bl[1]+size_spacing*4),str(ship_len), self.BLACK, font=self.hanken_bold_14)
 
-            picDraw.line([
+            pic_draw.line([
                 (tl[0]-size_spacing, tl[1]),
                 (tl[0]-size_spacing*2, tl[1]),
                 (tl[0]-size_spacing*2, n[1]),
@@ -283,8 +278,8 @@ class ShipZoneScreen:
                 (tl[0]-size_spacing, bl[1]),
             ], fill=self.BLACK, width=2)
 
-            text_size = self.getTextSize(self.hanken_bold_14,str(shipWid))
-            picDraw.text((tl[0]-text_size[0]-size_spacing*4, n[1]-text_size[1]/2),str(shipWid), self.BLACK, font=self.hanken_bold_14)
+            text_size = self.__get_text_size(self.hanken_bold_14,str(ship_wid))
+            pic_draw.text((tl[0]-text_size[0]-size_spacing*4, n[1]-text_size[1]/2),str(ship_wid), self.BLACK, font=self.hanken_bold_14)
 
             if self.mode == self.MODE_DARK:
                 pic = ImageOps.invert(pic)
@@ -292,8 +287,8 @@ class ShipZoneScreen:
         text_y += 298
 
         # Draw the ship name
-        text = self.activeShip["name"]
-        tx_w,tx_h = self.getTextSize(self.hanken_bold_35,text)
+        text = self.visible_ship["name"]
+        tx_w,tx_h = self.__get_text_size(self.hanken_bold_35,text)
         draw.text((int(self.width/2-tx_w/2),text_y), text, self.BLUE, font=self.hanken_bold_35)
 
         text_y += tx_h+2
@@ -305,29 +300,29 @@ class ShipZoneScreen:
         lines = [{
             "icon": self.icons["mmsi"],
             "name": "MMSI",
-            "value": str(self.activeShip["mmsi"])
+            "value": str(self.visible_ship["mmsi"])
         },{
             "icon": self.icons["callsign"],
             "name": "Callsign",
-            "value": str(self.activeShip["callsign"])
+            "value": str(self.visible_ship["callsign"])
         },{
             "icon": self.icons["shiptype"],
             "name": "Vessel Type",
-            "value": self.getVesselType(self.activeShip["type"])
+            "value": self.__get_vessel_type(self.visible_ship["type"])
         }]
 
-        if "destination" in self.activeShip:
+        if "destination" in self.visible_ship:
             lines.append({
                 "icon": self.icons["dest"],
                 "name": "Destination",
-                "value": self.activeShip["destination"]
+                "value": self.visible_ship["destination"]
             })
 
-        if "speed" in self.activeShip:
+        if "speed" in self.visible_ship:
             lines.append({
                 "icon": self.icons["speed"],
                 "name": "Speed",
-                "value": str(self.activeShip["speed"])+"kts"
+                "value": str(self.visible_ship["speed"])+"kts"
             })
 
         # Loop Start
@@ -341,7 +336,7 @@ class ShipZoneScreen:
 
             # Draw Text
             text = item["value"]
-            tx_w,tx_h = self.getTextSize(self.hanken_bold_20,text)
+            tx_w,tx_h = self.__get_text_size(self.hanken_bold_20,text)
             draw.text((text_x,text_y), item["name"], self.BLUE, font=self.hanken_bold_20)
             draw.text((self.width-screen_padding-container_padding_horz-tx_w,text_y), text, self.BLUE, font=self.hanken_bold_20)
 
