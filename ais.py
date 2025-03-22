@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from dotenv import dotenv_values
+from input_processor import InputProcessor
+from input.keyboard_input import KeyboardInput
 from message_processor import MessageProcessor
 from ship_tracker import ShipTracker
 from screen_manager import ScreenManager
@@ -60,5 +62,11 @@ stt.start()
 sut = Thread(target=begin_screen_updates)
 sut.start()
 
+input_processor = InputProcessor(KeyboardInput())
+
 while True:
-    pass
+    key_val = input_processor.get_key()
+    if key_val != None:
+        vessel_update_queue.put(("screen",key_val))
+
+    #time.sleep(0.5)

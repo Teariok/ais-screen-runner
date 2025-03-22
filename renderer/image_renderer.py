@@ -4,5 +4,5 @@ class ImageRenderer:
         self.height = height
         self.width = width
 
-    def render(self, img):
+    def render(self, img, force = False):
         img.save(self.img_name)

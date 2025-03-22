@@ -71,6 +71,8 @@ class ScreenBase():
 
     def set_active(self, active):
         self.active = active
+        if self.active:
+            self._render_screen(True)
 
     def set_mode(self, mode):
         if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):
@@ -112,3 +114,6 @@ class ScreenBase():
         new_height = int(original_height * scale_factor)
 
         return pic.resize((new_width, new_height), Image.LANCZOS)
+    
+    def _render_screen(self, force = False):
+        pass

@@ -15,23 +15,28 @@ class InkyRenderer:
         self.pending_render = None
         return
 
-    def render(self, img):
+    def render(self, img, force = False):
         if img == None:
             img = self.pending_render
             if img == None:
                 return
-            
+        
         self.pending_render = img
         now = datetime.datetime.now()
-        time_diff = (now - self.last_render).total_seconds()
 
-        if self.timer and time_diff < self.min_render_interval:
-            return
+        if force:
+            if self.timer:
+                self.timer.cancel()
+        else:
+            time_diff = (now - self.last_render).total_seconds()
 
-        if time_diff < self.min_render_interval:
-            self.timer = threading.Timer(self.min_render_interval - time_diff, self.render, [None])
-            self.timer.start()
-            return
+            if self.timer and time_diff < self.min_render_interval:
+                return
+
+            if time_diff < self.min_render_interval:
+                self.timer = threading.Timer(self.min_render_interval - time_diff, self.render, [None])
+                self.timer.start()
+                return
 
         self.timer = None
         self.last_render = now

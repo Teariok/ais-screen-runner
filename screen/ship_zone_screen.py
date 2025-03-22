@@ -41,9 +41,9 @@ class ShipZoneScreen(ScreenBase):
             return
 
         self.visible_ship = ship_data
-        self.__render_screen()
+        self._render_screen()
 
-    def __render_screen(self):
+    def _render_screen(self, force = False):
         if not self.active or self.visible_ship == None:
             return
         
@@ -248,4 +248,4 @@ class ShipZoneScreen(ScreenBase):
 
         img = img.convert("RGB")
 
-        self.renderer.render(img)
+        self.renderer.render(img, force)

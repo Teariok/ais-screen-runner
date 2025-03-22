@@ -33,7 +33,7 @@ class ShipTableScreen(ScreenBase):
     def __handle_timer(self):
         self.timer = threading.Timer(self.render_interval, self.__handle_timer)
         self.timer.start()
-        self.__render_screen()
+        self._render_screen()
 
     def update(self, msg):
         if msg[0] != "update":
@@ -44,7 +44,7 @@ class ShipTableScreen(ScreenBase):
         self.visible_ships[ship['mmsi']] = ship
         self.visible_ships = dict(sorted(self.visible_ships.items(), key=lambda item: item[1]['ts'], reverse=True)[:self.max_tracked])
 
-    def __render_screen(self):
+    def _render_screen(self, force = False):
         if not self.active:
             return
         
@@ -127,4 +127,4 @@ class ShipTableScreen(ScreenBase):
 
         img = img.convert("RGB")
 
-        self.renderer.render(img)
+        self.renderer.render(img, force)
