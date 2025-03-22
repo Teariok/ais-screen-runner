@@ -7,6 +7,7 @@ class ScreenManager:
         self.active_screen = 0
         self.vessel_queue = vessel_queue
         self.screens[self.active_screen].set_active(True)
+        self.dark_mode = False
 
     def begin_processing(self):
         while True:
@@ -16,6 +17,8 @@ class ScreenManager:
 
             if msg[0] == "screen":
                 self.__activate_screen(msg[1])
+            elif msg[0] == "mode":
+                self.__set_mode(not self.dark_mode)
             else:
                 for screen in self.screens:
                     screen.update(msg)
@@ -26,7 +29,8 @@ class ScreenManager:
             self.active_screen = index
             self.screens[self.active_screen].set_active(True)
 
-    def set_mode(self, mode):
-        if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):
-            self.mode = mode
-            self._renderScreen()
+    def __set_mode(self, dark_mode):
+        if self.dark_mode != dark_mode:
+            self.dark_mode = dark_mode
+            for screen in self.screens:
+                screen.set_mode(self.dark_mode)

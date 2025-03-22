@@ -1,5 +1,5 @@
 from font_hanken_grotesk import HankenGroteskBold
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 import threading
 import logging
@@ -124,6 +124,9 @@ class ShipTableScreen(ScreenBase):
             text_y += text_size[1] + 10
             draw.line([(text_x,text_y),(self.width-text_x,text_y)], fill=self.BLUE, width=2)
             text_y += 10
+
+        if self._dark_mode:
+            img = ImageOps.invert(img)
 
         img = img.convert("RGB")
 

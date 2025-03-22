@@ -66,7 +66,9 @@ input_processor = InputProcessor(KeyboardInput())
 
 while True:
     key_val = input_processor.get_key()
-    if key_val != None:
+    if key_val == 3:
+        vessel_update_queue.put(("mode",))
+    elif key_val != None:
         vessel_update_queue.put(("screen",key_val))
 
     #time.sleep(0.5)

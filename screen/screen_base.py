@@ -46,15 +46,12 @@ class ScreenBase():
     BLUE="#0000FF"
     YELLOW="#FFFF00"
 
-    MODE_LIGHT=0
-    MODE_DARK=1
-
     _LARGE_ICON_SIZE = 40
     _SMALL_ICON_SIZE = 24
 
-    def __init__(self,img_dir,renderer):
+    def __init__(self, img_dir, renderer, dark_mode = False):
         self.img_dir = img_dir
-        self.mode = self.MODE_LIGHT
+        self._dark_mode = dark_mode
 
         self.renderer = renderer
 
@@ -74,9 +71,11 @@ class ScreenBase():
         if self.active:
             self._render_screen(True)
 
-    def set_mode(self, mode):
-        if self.mode != mode and (mode == self.MODE_LIGHT or mode == self.MODE_DARK):
-            self.mode = mode
+    def set_mode(self, dark_mode):
+        if self._dark_mode != dark_mode:
+            self._dark_mode = dark_mode
+            if self.active:
+                self._render_screen(True)
 
     def _get_text_size(self, font, text):
         _, _, right, bottom = font.getbbox(text)

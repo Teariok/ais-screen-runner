@@ -175,7 +175,7 @@ class ShipZoneScreen(ScreenBase):
             text_size = self._get_text_size(self.hanken_bold_14,str(ship_wid))
             pic_draw.text((tl[0]-text_size[0]-size_spacing*4, n[1]-text_size[1]/2),str(ship_wid), self.BLACK, font=self.hanken_bold_14)
 
-            if self.mode == self.MODE_DARK:
+            if self._dark_mode:
                 pic = ImageOps.invert(pic)
 
         text_y += 298
@@ -241,7 +241,7 @@ class ShipZoneScreen(ScreenBase):
 
             text_y += 35
 
-        if self.mode == self.MODE_DARK:
+        if self._dark_mode:
             img = ImageOps.invert(img)
         
         img.paste(pic, (screen_padding+container_padding_horz+img_padding, image_y+img_padding))
