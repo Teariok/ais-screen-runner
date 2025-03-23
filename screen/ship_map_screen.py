@@ -8,7 +8,7 @@ import os
 import urllib
 
 class ShipMapScreen(ScreenBase):
-    def __init__(self, img_dir, renderer, api_key, bounds, light_style, dark_style, time_window = 60 * 5, render_interval = 10, max_tracked = 20):
+    def __init__(self, img_dir, renderer, api_key, bounds, light_style, dark_style, time_window = 60 * 5, render_interval = 60 * 3, max_tracked = 20):
         super().__init__(img_dir, renderer)
         self.logger = logging.getLogger(__name__)
 
