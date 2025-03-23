@@ -50,7 +50,7 @@ class ShipMapScreen(ScreenBase):
             try:
                 style = map[1]
                 size = f"{self.renderer.height}x{self.renderer.width}"
-                bounds = f"[{self.bounds[0],self.bounds[1],self.bounds[2],self.bounds[3]}]"
+                bounds = f"[{self.bounds[0]},{self.bounds[1]},{self.bounds[2]},{self.bounds[3]}]"
 
                 url = f"https://api.mapbox.com/styles/v1/mapbox/{style}/static/{bounds}/{size}?access_token={self.api_key}"
                 urllib.request.urlretrieve(url, img_path)
