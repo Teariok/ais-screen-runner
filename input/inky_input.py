@@ -14,7 +14,8 @@ class InkyInput:
     def get_key(self):
         events = self.request.read_edge_events()
         if len(events) > 0:
-            index = self.offsets.index(events[-1].line_offset)
+            # Invert the index as button "D" is first when Inky is in portrait
+            index = (len(self.offsets) - self.offsets.index(events[-1].line_offset)) - 1
             if index >= 0 and index < 4:
                 return index
         
