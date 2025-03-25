@@ -16,8 +16,8 @@ class ShipTableScreen(ScreenBase):
         self.max_tracked:int = max_tracked
         self.visible_ships:dict[str,dict[str,any]] = {}
 
-        self.hanken_bold_20:Image.TrueTypeFont = ImageFont.truetype(HankenGroteskBold, 20)
-        self.hanken_bold_14:Image.TrueTypeFont = ImageFont.truetype(HankenGroteskBold, 14)
+        self.hanken_bold_20:ImageFont.FreeTypeFont = ImageFont.truetype(HankenGroteskBold, 20)
+        self.hanken_bold_14:ImageFont.FreeTypeFont = ImageFont.truetype(HankenGroteskBold, 14)
 
         self.render_interval:int = render_interval
         self.timer:threading.Timer|None = None

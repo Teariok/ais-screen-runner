@@ -78,7 +78,7 @@ class ScreenBase():
             if self.active:
                 self._render_screen(True)
 
-    def _get_text_size(self, font:Image.TrueTypeFont, text:str) -> tuple[int,int]:
+    def _get_text_size(self, font:any, text:str) -> tuple[int,int]:
         _, _, right, bottom = font.getbbox(text)
         return (right, bottom)
     

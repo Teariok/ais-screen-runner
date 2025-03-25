@@ -16,9 +16,9 @@ class ShipZoneScreen(ScreenBase):
 
         self.visible_ship:dict[str,any]|None = None
 
-        self.hanken_bold_35:Image.TrueTypeFont = ImageFont.truetype(HankenGroteskBold, 35)
-        self.hanken_bold_20:Image.TrueTypeFont = ImageFont.truetype(HankenGroteskBold, 20)
-        self.hanken_bold_14:Image.TrueTypeFont = ImageFont.truetype(HankenGroteskBold, 14)
+        self.hanken_bold_35:ImageFont.FreeTypeFont = ImageFont.truetype(HankenGroteskBold, 35)
+        self.hanken_bold_20:ImageFont.FreeTypeFont = ImageFont.truetype(HankenGroteskBold, 20)
+        self.hanken_bold_14:ImageFont.FreeTypeFont = ImageFont.truetype(HankenGroteskBold, 14)
 
         self._load_icon("ship", "icon_ship.png", self._LARGE_ICON_SIZE)
         self._load_icon("mmsi", "icon_mmsi.png", self._SMALL_ICON_SIZE)

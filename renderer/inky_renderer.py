@@ -44,5 +44,5 @@ class InkyRenderer:
         self.pending_render = None
         img = img.rotate(90,expand=1)
 
-        #self.inky.set_image(img)
-        #self.inky.show()
+        self.inky.set_image(img)
+        self.inky.show()
