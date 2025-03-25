@@ -1,22 +1,24 @@
-import paho.mqtt.client as mqtt
-from pyais.stream import TagBlockQueue
-from pyais.queue import NMEAQueue
 import json
 import logging
 
+import paho.mqtt.client as mqtt
+from pyais.queue import NMEAQueue
+from pyais.stream import TagBlockQueue
+
+
 class MessageProcessor:
-    def __init__(self, mqtt_addr, mqtt_port, mqtt_topic, message_handler):
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, mqtt_addr:str, mqtt_port:int, mqtt_topic:str, message_handler:any):
+        self.logger:logging.Logger = logging.getLogger(__name__)
 
-        self.mqtt_addr = mqtt_addr
-        self.mqtt_port = mqtt_port
-        self.mqtt_topic = mqtt_topic
-        self.message_handler = message_handler
+        self.mqtt_addr:str = mqtt_addr
+        self.mqtt_port:int = mqtt_port
+        self.mqtt_topic:str = mqtt_topic
+        self.message_handler:any = message_handler
 
-        tbq = TagBlockQueue()
-        self.message_queue = NMEAQueue(tbq=tbq)
+        tbq:TagBlockQueue = TagBlockQueue()
+        self.message_queue:NMEAQueue = NMEAQueue(tbq=tbq)
 
-        self.mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        self.mqttc:mqtt.Client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqttc.on_connect = self.__on_connected
         self.mqttc.on_message = self.__on_message
 
@@ -34,9 +36,10 @@ class MessageProcessor:
             self.__handle_message(msg)
 
     def __handle_message(self, msg):
-        if self.message_handler == None:
-            raise TypeError("on_message must be set to a callback function")
+        if self.message_handler is None:
+            raise TypeError("Message handler must be set to a callback function")
 
+        # Use the message queue to help with handling multipart messages
         self.message_queue.put_line(msg.payload)
         
         while True:
@@ -44,11 +47,10 @@ class MessageProcessor:
             if not ais_message:
                 break
 
-            decoded_sentence = ais_message.decode().asdict()
-                
+            decoded_sentence:dict[str,any] = ais_message.decode().asdict()
+            
             for key, value in decoded_sentence.items():
                 if isinstance(value, bytes):
                     decoded_sentence[key] = value.decode('utf-8', errors='ignore')
                 
             self.message_handler.put(json.dumps(decoded_sentence))
-            #self.on_message(json.dumps(decoded_sentence))

@@ -1,16 +1,19 @@
+import json
+import logging
+import math
 import sqlite3
 import time
-import math
-import logging
-import json
+
 
 class ShipTracker:
-    def __init__(self,track_limit,db_path,message_queue,vessel_queue):
+    def __init__(self, track_limit:int, db_path:str, message_queue:any, vessel_queue:any):
         self.logger = logging.getLogger(__name__)
 
         self.vessels = {}
         self.max_tracked = track_limit
+
         self.zones = []
+
         self.message_queue = message_queue
         self.vessel_queue = vessel_queue
 
@@ -19,7 +22,7 @@ class ShipTracker:
     def __del__(self):
         self.db_conn.close()
 
-    def __init_database(self,db_path):
+    def __init_database(self, db_path:str):
         self.db_conn = sqlite3.connect(db_path)
         self.db_conn.row_factory = sqlite3.Row
         self.db_cur = self.db_conn.cursor()
@@ -43,18 +46,18 @@ class ShipTracker:
         while True:
             msg = self.message_queue.get()
 
-            if msg == None:
+            if msg is None:
                 continue
 
             try:
                 data = json.loads(msg)
             except json.JSONDecodeError as e:
-                self.logger.exception(f"Error decoding JSON", exc_info=e)
+                self.logger.exception("Error decoding JSON", exc_info=e)
                 continue
 
             self.update_vessel(data)
 
-    def update_vessel(self,message):
+    def update_vessel(self, message:dict[str,any]):
         msg_type = message["msg_type"]
         mmsi = message["mmsi"]
 
@@ -87,17 +90,17 @@ class ShipTracker:
         self.vessels = dict(sorted(self.vessels.items(), key=lambda item: item[1]['ts'], reverse=True)[:self.max_tracked])
 
         ship = self.vessels[mmsi]
-        if self.vessel_queue != None:
+        if self.vessel_queue is not None:
             if ship.get("zone", None) != zone_prev:
                 self.vessel_queue.put(("zone",ship,zone_prev))
 
         self.logger.info(f"SHIP: {ship.get('name','Unknown')} {mmsi}, Zone: {ship.get('zone', 'None')}")
         self.vessel_queue.put(("update",ship))
 
-    def add_zone(self,zone_data):
+    def add_zone(self, zone_data:list[dict[str,any]]):
         self.zones.append(zone_data)
 
-    def check_zones(self, ship_lat, ship_lon):
+    def check_zones(self, ship_lat:float, ship_lon:float):
         if len(self.zones) == 0:
             self.logger.info("Zone check request but no zones present")
             return None
@@ -106,11 +109,11 @@ class ShipTracker:
             name, zone_lat, zone_lon, radius = zone
 
             zone_lat, zone_lon, ship_lat, ship_lon = map(math.radians, [zone_lat, zone_lon, ship_lat, ship_lon])
-            a = math.sin((ship_lat - zone_lat) / 2)**2 + math.cos(zone_lat) * math.cos(ship_lat) * math.sin((ship_lon - zone_lon) / 2)**2
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            a:float = math.sin((ship_lat - zone_lat) / 2)**2 + math.cos(zone_lat) * math.cos(ship_lat) * math.sin((ship_lon - zone_lon) / 2)**2
+            c:float = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-            EARTH_RADIUS = 6371
-            distance = EARTH_RADIUS * c
+            EARTH_RADIUS:float = 6371
+            distance:float = EARTH_RADIUS * c
             
             self.logger.info(f"Distance {distance} Radius {radius}")
             if distance <= radius:
@@ -118,7 +121,7 @@ class ShipTracker:
 
         return None
 
-    def __record_ship(self, message, allow_update):
+    def __record_ship(self, message:dict[str,any], allow_update:bool):
         values = {
             'mmsi': message["mmsi"],
             'imo': message.get("imo", "0"),

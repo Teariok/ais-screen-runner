@@ -1,6 +1,7 @@
-from PIL import Image
-import os
 import math
+import os
+
+from PIL import Image
 
 VESSEL_TYPES = {
     -1: "Unknown",
@@ -39,80 +40,83 @@ VESSEL_SUBCATS = {
 }
 
 class ScreenBase():
-    WHITE="#FFFFFF"
-    BLACK="#000000"
-    RED="#FF0000"
-    GREEN="#00FF00"
-    BLUE="#0000FF"
-    YELLOW="#FFFF00"
+    WHITE:str="#FFFFFF"
+    BLACK:str="#000000"
+    RED:str="#FF0000"
+    GREEN:str="#00FF00"
+    BLUE:str="#0000FF"
+    YELLOW:str="#FFFF00"
 
-    _LARGE_ICON_SIZE = 40
-    _SMALL_ICON_SIZE = 24
+    _LARGE_ICON_SIZE:int = 40
+    _SMALL_ICON_SIZE:int = 24
 
-    def __init__(self, img_dir, renderer, dark_mode = False):
-        self.img_dir = img_dir
-        self._dark_mode = dark_mode
+    def __init__(self, img_dir: str, renderer: any, dark_mode: bool = False):
+        self.img_dir: str = img_dir
+        self._dark_mode: bool = dark_mode
 
-        self.renderer = renderer
+        self.renderer: any = renderer
 
-        self.height = self.renderer.width
-        self.width = self.renderer.height
+        self.height: int = self.renderer.width
+        self.width: int = self.renderer.height
 
-        self.active = False
+        self.active: bool = False
 
-        self.icons = {}
+        self.icons: dict[str,Image.Image] = {}
 
-    def _load_icon(self, key, filename, size):
-        icon = Image.open(os.path.join("icon", filename))
+    def _load_icon(self, key:str, filename:str, size:int):
+        icon:Image.Image = Image.open(os.path.join("icon", filename))
         self.icons[key] = self._resize_image(icon, size, size)
 
-    def set_active(self, active):
+    def set_active(self, active:bool):
         self.active = active
         if self.active:
             self._render_screen(True)
 
-    def set_mode(self, dark_mode):
+    def set_mode(self, dark_mode:bool):
         if self._dark_mode != dark_mode:
             self._dark_mode = dark_mode
             if self.active:
                 self._render_screen(True)
 
-    def _get_text_size(self, font, text):
+    def _get_text_size(self, font:Image.TrueTypeFont, text:str) -> tuple[int,int]:
         _, _, right, bottom = font.getbbox(text)
         return (right, bottom)
     
-    def _get_vessel_type(self, value):
-        vessel_type = VESSEL_TYPES.get(value)
+    def _get_vessel_type(self, value:int) -> str:
+        if value is None:
+            return "Unknown"
+
+        vessel_type: str = VESSEL_TYPES.get(value)
 
         if vessel_type:
             return vessel_type
 
-        base_cat = math.floor(value / 10) * 10
+        base_cat: int = math.floor(value / 10) * 10
         vessel_type = VESSEL_TYPES.get(base_cat)
 
         if vessel_type is None:
             return "Reserved"
 
-        sub_cat = value % 10
-        sub_cat_type = VESSEL_SUBCATS.get(sub_cat)
+        sub_cat: int = value % 10
+        sub_cat_type: int = VESSEL_SUBCATS.get(sub_cat)
 
         if sub_cat_type:
             return f"{vessel_type} - {sub_cat_type}"
 
         return vessel_type
 
-    def _resize_image(self, pic, max_width, max_height):
+    def _resize_image(self, pic:Image.Image, max_width:int, max_height:int) -> Image.Image:
         original_width, original_height = pic.size
 
-        width_ratio = max_width / original_width
-        height_ratio = max_height / original_height
+        width_ratio: float = max_width / original_width
+        height_ratio: float = max_height / original_height
 
-        scale_factor = min(width_ratio, height_ratio)
+        scale_factor: float = min(width_ratio, height_ratio)
 
-        new_width = int(original_width * scale_factor)
-        new_height = int(original_height * scale_factor)
+        new_width: int = int(original_width * scale_factor)
+        new_height: int = int(original_height * scale_factor)
 
         return pic.resize((new_width, new_height), Image.LANCZOS)
     
-    def _render_screen(self, force = False):
+    def _render_screen(self, force:bool = False):
         pass

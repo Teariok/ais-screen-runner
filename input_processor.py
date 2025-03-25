@@ -1,10 +1,10 @@
 class InputProcessor:
-    def __init__(self, processor):
-        self.processor = processor
-        self.prev_key = None
+    def __init__(self, processor:any):
+        self.processor: any = processor
+        self.prev_key: int = None
 
-    def get_key(self):
-        new_key = self.processor.get_key()
+    def get_key(self) -> int:
+        new_key: int = self.processor.get_key()
         if new_key != self.prev_key:
             self.prev_key = new_key
             return new_key

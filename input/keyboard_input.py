@@ -1,14 +1,11 @@
 import keyboard
 
 class KeyboardInput:
-    def get_key(self):
-        if keyboard.is_pressed('1'):
-            return 0
-        elif keyboard.is_pressed('2'):
-            return 1
-        elif keyboard.is_pressed('3'):
-            return 2
-        elif keyboard.is_pressed('4'):
-            return 3
+    def get_key(self) -> int|None:
+        keys: list[str] = ['1','2','3','4']
+
+        for k in keys:
+            if keyboard.is_pressed(k):
+                return keys.index(k)
         
         return None
