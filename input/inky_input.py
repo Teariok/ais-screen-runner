@@ -9,7 +9,6 @@ class InkyInput:
     def __init__(self):
         self.logger: logging.Logger = logging.getLogger(__name__)
 
-        #buttons = [5, 6, 16, 24]
         buttons: list[int] = [24, 16, 6, 5]
         line_settings: any = gpiod.LineSettings(direction=Direction.INPUT, bias=Bias.PULL_UP, edge_detection=Edge.FALLING)
         chip: any = gpiodevice.find_chip_by_platform()
@@ -20,8 +19,6 @@ class InkyInput:
     def get_key(self) -> int|None:
         events: any = self.request.read_edge_events()
         if len(events) > 0:
-            # Invert the index as button "D" is first when Inky is in portrait
-            #index = (len(self.offsets) - self.offsets.index(events[-1].line_offset)) - 1
             try:
                 index: int = self.offsets.index(events[-1].line_offset)
                 if index >= 0 and index < 4:

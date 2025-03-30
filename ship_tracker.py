@@ -67,6 +67,10 @@ class ShipTracker:
             self.logger.info(f"MMSI {str(mmsi)} is not a ship. Skip update.")
             return
         
+        # If the first 3 values of MMSI are 111 this is a SAR aircraft
+        if str(mmsi).startswith("111"):
+            return
+        
         # Only these 2 message types have static data
         has_static_data = msg_type == 5# or msg_type == 24
 
