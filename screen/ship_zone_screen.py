@@ -43,8 +43,11 @@ class ShipZoneScreen(ScreenBase):
             self.logger.info("Skip display - ship is already displayed")
             return
 
-        self.visible_ship = ship_data
-        self._render_screen()
+        try:
+            self.visible_ship = ship_data
+            self._render_screen()
+        except Exception as e:
+            self.logger.exception("Ship Zone Exception", exc_info=e)
 
     def _render_screen(self, force:bool = False):
         if not self.active or self.visible_ship is None:
