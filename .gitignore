@@ -4,3 +4,4 @@ output.jpg
 .env
 *.log
 .vscode
+user_prefs.json
