@@ -25,7 +25,7 @@ class MessageProcessor:
             raise TypeError("Message handler must be set to a callback function")
 
         # Use the message queue to help with handling multipart messages
-        self.message_queue.put_line(msg.payload)
+        self.message_queue.put_line(msg)
         
         while True:
             ais_message = self.message_queue.get_or_none()

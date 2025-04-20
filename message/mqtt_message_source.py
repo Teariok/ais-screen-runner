@@ -21,7 +21,7 @@ class MQTTMessageSource:
 
     def __on_message(self, client, userdata, msg):
         if msg.topic.startswith("/sensor"):
-            self.handle_message(msg)
+            self.handle_message(msg.payload)
 
     def begin_processing(self):
         self.logger.info(f"Connect to {self.mqtt_addr}:{self.mqtt_port}")
