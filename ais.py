@@ -22,30 +22,39 @@ from ship_tracker import ShipTracker
 
 
 def begin_message_processing():
-    message_processor:MessageProcessor = MessageProcessor(env["MQTT_ADDR"], int(env["MQTT_PORT"]), env["MQTT_AIS_TOPIC"], ais_message_queue)
-    message_processor.begin_processing()
+    try:
+        message_processor:MessageProcessor = MessageProcessor(env["MQTT_ADDR"], int(env["MQTT_PORT"]), env["MQTT_AIS_TOPIC"], ais_message_queue)
+        message_processor.begin_processing()
+    except Exception as ex:
+        logger.exception("Message Processing Exception", exc_info=ex)
 
 def begin_ship_tracking():
-    # Init the tracker to keep a record of vessels we've seen
-    ship_tracker:ShipTracker = ShipTracker(int(env["MAX_DYN_SIZE"]), env["DB_NAME"], ais_message_queue, vessel_update_queue)
+    try:
+        # Init the tracker to keep a record of vessels we've seen
+        ship_tracker:ShipTracker = ShipTracker(int(env["MAX_DYN_SIZE"]), env["DB_NAME"], ais_message_queue, vessel_update_queue)
 
-    # Set the notification zones up from the env
-    zones:list[dict[str,any]] = prefs.get("ZONES",[])
-    for zone in zones:
-        ship_tracker.add_zone((zone["name"], zone["lat"], zone["lon"], zone["radius"]))
+        # Set the notification zones up from the env
+        zones:list[dict[str,any]] = prefs.get("ZONES",[])
+        for zone in zones:
+            ship_tracker.add_zone((zone["name"], zone["lat"], zone["lon"], zone["radius"]))
 
-    ship_tracker.begin_processing()
+        ship_tracker.begin_processing()
+    except Exception as ex:
+        logger.exception("Ship Tracking Exception", exc_info=ex)
 
 def begin_screen_updates(no_screen:bool = True):
-    renderer:ImageRenderer|InkyRenderer = ImageRenderer("output.jpg") if no_screen else InkyRenderer()
-    screens:list[ShipZoneScreen|ShipTableScreen|ShipMapScreen] = [
-        ShipZoneScreen(env["IMG_DIR"], renderer),
-        ShipTableScreen(env["IMG_DIR"], renderer),
-        ShipMapScreen(env["IMG_DIR"], renderer, env["MAPBOX_API_KEY"], prefs.get("MAP_BOUNDS", []), prefs.get("MAPBOX_LIGHT_STYLE",""), prefs.get("MAPBOX_DARK_STYLE","")),
-    ]
+    try:
+        renderer:ImageRenderer|InkyRenderer = ImageRenderer("output.jpg") if no_screen else InkyRenderer()
+        screens:list[ShipZoneScreen|ShipTableScreen|ShipMapScreen] = [
+            ShipZoneScreen(env["IMG_DIR"], renderer),
+            ShipTableScreen(env["IMG_DIR"], renderer),
+            ShipMapScreen(env["IMG_DIR"], renderer, env["MAPBOX_API_KEY"], prefs.get("MAP_BOUNDS", []), prefs.get("MAPBOX_LIGHT_STYLE",""), prefs.get("MAPBOX_DARK_STYLE","")),
+        ]
 
-    screen_manager:ScreenManager = ScreenManager(screens, vessel_update_queue)
-    screen_manager.begin_processing()
+        screen_manager:ScreenManager = ScreenManager(screens, vessel_update_queue)
+        screen_manager.begin_processing()
+    except Exception as ex:
+        logger.exception("Screen Update Exception", exc_info=ex)
 
 logger:logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('ais.log'),logging.StreamHandler()])
