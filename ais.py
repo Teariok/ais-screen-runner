@@ -44,9 +44,9 @@ def begin_ship_tracking():
     except Exception as ex:
         logger.exception("Ship Tracking Exception", exc_info=ex)
 
-def begin_screen_updates(no_screen:bool = True):
+def begin_screen_updates(renderer_type:str = "image"):
     try:
-        renderer:ImageRenderer|InkyRenderer = ImageRenderer("output.jpg") if no_screen else InkyRenderer()
+        renderer:ImageRenderer|InkyRenderer = ImageRenderer("output.jpg") if renderer_type == "image" else InkyRenderer()
         screens:list[ShipZoneScreen|ShipTableScreen|ShipMapScreen] = [
             ShipZoneScreen(env["IMG_DIR"], renderer),
             ShipTableScreen(env["IMG_DIR"], renderer),
@@ -81,7 +81,7 @@ msg_proc_thread.start()
 ship_track_thread:Thread = Thread(target=begin_ship_tracking)
 ship_track_thread.start()
 
-screen_update_thread:Thread = Thread(target=begin_screen_updates, args=[False])
+screen_update_thread:Thread = Thread(target=begin_screen_updates, args=[prefs.get("RENDERER","image")])
 screen_update_thread.start()
 
 input_processor:InputProcessor = InputProcessor(KeyboardInput())
