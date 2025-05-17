@@ -61,7 +61,7 @@ def begin_screen_updates(renderer_type:str = "image"):
         logger.exception("Screen Update Exception", exc_info=ex)
 
 logger:logging.Logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('ais.log'),logging.StreamHandler()])
+logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('ais.log'),logging.StreamHandler()],format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",datefmt="%Y-%m-%d %H:%M:%S")
 
 if not os.path.exists(".env"):
     logger.critical(".env file does not exist!")
