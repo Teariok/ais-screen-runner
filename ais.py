@@ -9,9 +9,10 @@ from threading import Thread
 
 from dotenv import dotenv_values
 
-from input.keyboard_input import KeyboardInput
+#from input.keyboard_input import KeyboardInput
+from input.inky_input import InkyInput
 from input_processor import InputProcessor
-from message.mqtt_message_source import MQTTMessageSource
+from message.daisy_message_source import DaisyMessageSource
 from message_processor import MessageProcessor
 from renderer.image_renderer import ImageRenderer
 from renderer.inky_renderer import InkyRenderer
@@ -24,8 +25,9 @@ from ship_tracker import ShipTracker
 
 def begin_message_processing():
     try:
-        mqtt_source:MQTTMessageSource = MQTTMessageSource(env["MQTT_ADDR"], int(env["MQTT_PORT"]), env["MQTT_AIS_TOPIC"])
-        message_processor:MessageProcessor = MessageProcessor(mqtt_source, ais_message_queue)
+        #mqtt_source:MQTTMessageSource = MQTTMessageSource(env["MQTT_ADDR"], int(env["MQTT_PORT"]), env["MQTT_AIS_TOPIC"])
+        i2c_source:DaisyMessageSource = DaisyMessageSource()
+        message_processor:MessageProcessor = MessageProcessor(i2c_source, ais_message_queue)
         message_processor.begin_processing()
     except Exception as ex:
         logger.exception("Message Processing Exception", exc_info=ex)
