@@ -86,7 +86,8 @@ ship_track_thread.start()
 screen_update_thread:Thread = Thread(target=begin_screen_updates, args=[prefs.get("RENDERER","image")])
 screen_update_thread.start()
 
-input_processor:InputProcessor = InputProcessor(KeyboardInput())
+#input_processor:InputProcessor = InputProcessor(KeyboardInput())
+input_processor:InputProcessor = InputProcessor(InkyInput())
 
 while True:
     key_val: int = input_processor.get_key()
