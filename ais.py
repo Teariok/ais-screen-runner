@@ -83,7 +83,7 @@ msg_proc_thread.start()
 ship_track_thread:Thread = Thread(target=begin_ship_tracking)
 ship_track_thread.start()
 
-screen_update_thread:Thread = Thread(target=begin_screen_updates, args=[prefs.get("RENDERER","image")])
+screen_update_thread:Thread = Thread(target=begin_screen_updates, args=[prefs.get("RENDERER","inky")])
 screen_update_thread.start()
 
 #input_processor:InputProcessor = InputProcessor(KeyboardInput())
