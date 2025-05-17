@@ -85,9 +85,11 @@ class ShipTracker:
         ship_prev = self.vessels.get(mmsi, {})
         zone_prev = ship_prev.get("zone", None)
 
-        if "lat" in dynamic_data and "lon" in dynamic_data:
-            ship["zone"] = self.check_zones(dynamic_data["lat"],dynamic_data["lon"])
-
+        lat = dynamic_data.get("lat")
+        lon = dynamic_data.get("lon")
+        if lat is not None and lon is not None:
+            ship["zone"] = self.check_zones(lat, lon)
+        
         self.vessels[mmsi] = {**ship_prev, **ship, **dynamic_data, **{"ts": int(time.time())}}
 
         # Trim the tracked vessel list down if it's over the max size
